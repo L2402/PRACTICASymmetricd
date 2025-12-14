@@ -1,0 +1,53 @@
+version: '3.8'
+
+services:
+  postgres-quito:
+    image: postgres:15
+    container_name: postgres-quito
+    environment:
+      POSTGRES_USER: blockbuster
+      POSTGRES_PASSWORD: blockbuster
+      POSTGRES_DB: blockbuster_db
+    ports:
+      - "5438:5432"
+    volumes:
+      - ./postgres/init.sql:/docker-entrypoint-initdb.d/init.sql
+
+  mysql-guayaquil:
+    image: mysql:8
+    container_name: mysql-guayaquil
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: blockbuster_guayaquil
+    ports:
+      - "3307:3306"
+    volumes:
+      - ./mysql-guayaquil/init.sql:/docker-entrypoint-initdb.d/init.sql
+
+  mysql-manta:
+    image: mysql:8
+    container_name: mysql-manta
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: blockbuster_manta
+    ports:
+      - "3308:3306"
+    volumes:
+      - ./mysql-manta/init.sql:/docker-entrypoint-initdb.d/init.sql
+
+  symmetricds:
+    image: jumpmind/symmetricds
+    container_name: symmetricds
+    restart: unless-stopped
+    ports:
+      - "31415:31415"
+    volumes:
+      - ./symmetricds/manta.properties/manta.properties:/opt/symmetric-ds/engines/manta.properties
+      - ./symmetricds/quito.properties/quito.properties:/opt/symmetric-ds/engines/quito.properties
+      - ./symmetricds/guayaquil.properties/guayaquil.properties:/opt/symmetric-ds/engines/guayaquil.properties
+    depends_on:
+      - postgres-quito
+      - mysql-guayaquil
+      - mysql-manta
+    environment:
+      - SYNCHRONIZE=true
